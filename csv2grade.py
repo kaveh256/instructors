@@ -1,7 +1,9 @@
 #!/usr/bin/python
-
-# CAUTION! Requires Python 2.
-
+#
+# Copyright Feb. 2011, Jim Clarke,
+# University of Toronto, Department of Computer Science
+# http://www.cdf.toronto.edu/~clarke/grade/
+#
 # Read an Excel file saved as "Comma Separated Values" and write to standard
 # output lines that would be the corresponding student records in a DCS grade
 # file. The input file name is the single command-line argument:
@@ -9,7 +11,8 @@
 #   csv2grade mygrades.csv
 #
 # The input lines in the Excel file are assumed to contain these fields,
-# separated by tabs: student number, family name, given names, mark, mark....
+# separated by tabs:
+#   student_number, lastname, firstname, mark, mark, ...
 # There is also very likely a control-M (carriage return) at the end of the
 # line; this does not appear in the output.
 #
@@ -24,38 +27,49 @@
 # probably a line of column labels, so it is silently skipped over. Lines
 # containing only white-space are also skipped. Trouble in other lines is
 # reported with error messages.
-
-# Jim Clarke, Feb 2011
-
-# Nov 29/12: added 'b' mode to open() call, at Kaveh Ghasemloo's suggestion.
-#   It's probably needed sometimes, and probably harmless at other times.
-
 import sys, csv
 
 if len(sys.argv) != 2:
-    print >> sys.stderr, 'Usage: csv2grade mygrades.csv [ > stdoutfile]'
+    sys.stderr.write('Usage: csv2grade.py mygrades.csv [ > outfile]')
     sys.exit(1)
 
-reader = csv.reader(open(sys.argv[1], 'Ub')) # 'U' is universal-newline mode
+# Open the input file.
+# 'U' is for universal-newline mode.
+# For Python 3.x use text mode. For Python 2.x use binary mode.
+reader = csv.reader(open(sys.argv[1], 'U'))
 
-lineNum = 0
 for line in reader:
-    lineNum += 1
+    # Skip empty lines.
     if len(line) == 0:
         continue
-    
-    stunum, family, given = line[:3] # You may want to change this.
-    if not stunum[0].isdigit():
-        if lineNum == 1:
+
+    # You may want to change this.
+    student_num, status, lastname, firstname = line[:4]
+    if status == '':
+        status = ' '
+
+    if not student_num[0].isdigit():
+        if reader.line_num == 1:
             continue
         else:
-            print >> sys.stderr, 'Line ', lineNum, ' begins with non-digit:'
-            print >> sys.stderr, line
+            sys.stderr.write('Line ' + str(reader.line_num) +
+                             ' begins with non-digit:\n' + str(line))
             sys.exit(1)
-            
-    marks = line[3:]
-    output_line = stunum + '    ' + family + '  ' + given
-    
-    for m in marks:
-        output_line += '\t' + m
-    print output_line
+
+    # Convert old student numbers to 10 digit student numbers.
+    if len(student_num) == 9:
+        student_num = '0' + student_num
+
+    # The student's information: sn, status, lastname, firstname
+    output_line = student_num + ' ' + status + '  ' + '_'.join(lastname.split(
+    )) + ' ' + '_'.join(firstname.split())
+
+    # The student's marks.
+    for mark in line[4:]:
+        output_line += '\t' + mark
+
+    # Finish the line.
+    output_line += '\n'
+
+    # Write the line to the output.
+    sys.stdout.write(output_line)
