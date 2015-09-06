@@ -1,7 +1,9 @@
 #!/usr/bin/python
-
-# CAUTION! Requires Python 2.
-
+#
+# Copyright May 2011, Jim Clarke,
+# University of Toronto, Department of Computer Science
+# http://www.cdf.toronto.edu/~clarke/grade/
+#
 # Read a file in the DCS standard grades format and write the student
 # marks to a "Comma Separated Values" file to be read by a
 # spreadsheet application.
@@ -31,14 +33,12 @@
 #
 #   grade2csv.py -9 gradefile.grade
 
-# Jim Clarke, May 2011
-
 import sys, csv
 
-stunumlength = 10
+student_number_len = 10
 
 if len(sys.argv) == 3 and sys.argv[1] == '-9':
-    stunumlength = 9
+    student_number_len = 9
     filename = sys.argv[2]
 elif len(sys.argv) == 2:
     filename = sys.argv[1]
@@ -66,32 +66,32 @@ writer = csv.writer(sys.stdout)
 while True:
     line = infile.readline()
     if line == '':
-        break # We're done.
+        break  # We're done.
     lineNum += 1
-    
+
     # Delete trailing newline.
     if line[-1] != '\n':
         print >> sys.stderr, "No newline at end of line", lineNum
     line = line[:-1]
-    
+
     # Break into parts: ID, then marks.
     marks = line.split('\t')
     ID = marks[0]
-    marks = marks[1 : ]
-    
+    marks = marks[1:]
+
     # Isolate the identifying information, skipping comment lines.
-    if len(ID) < stunumlength + 1:
+    if len(ID) < student_number_len + 1:
         print >> sys.stderr, "Too-short line at line", lineNum
         continue
-    if ID[stunumlength] == '*':
+    if ID[student_number_len] == '*':
         continue
-    if len(ID) < stunumlength + 6: # two characters for name!
+    if len(ID) < student_number_len + 6:  # two characters for name!
         print >> sys.stderr, "Too-short line at line", lineNum
         continue
-    stunum = ID[ : stunumlength]
-    flags = ID[stunumlength : stunumlength + 4]
-    name = ID[stunumlength + 4 : ]
-    
+    stunum = ID[:student_number_len]
+    flags = ID[student_number_len:student_number_len + 4]
+    name = ID[student_number_len + 4:]
+
     # Make a single list out of the student data.
     output = [stunum, flags, name]
     output += marks
